@@ -22,5 +22,5 @@ func NewRouter() *Router {
 }
 
 func (r *Router) RegisterUser(str storage.Storage) {
-	r.handler.HandlerFunc(http.MethodPost, "/api/v1/users", user.NewCreate(str).Handle)
+	r.handler.HandlerFunc(http.MethodPost, "/api/v1/users", user.NewLogIn(str).Handle)
 }

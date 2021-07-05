@@ -5,37 +5,25 @@ import (
 	"log"
 	"net/http"
 	"shopee-backend-entry-task/client/internal/pkg/storage"
+	"shopee-backend-entry-task/model"
 )
 
-type CreateRequestBody struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type CreateResponseBody struct {
-	Code int `json:"code"`
-	Data struct {
-		ID        string `json:"id"`
-		CreatedAt string `json:"created_at"`
-		Status    string `json:"status"`
-	} `json:"data"`
-}
-
-type Create struct {
+type Login struct {
 	storage storage.Storage
 }
 
-func NewCreate(str storage.Storage) Create {
-	return Create{
+// NewLogIn Constructor
+func NewLogIn(str storage.Storage) Login {
+	return Login{
 		storage: str,
 	}
 }
 
-// POST /api/v1/users
-func (c Create) Handle(w http.ResponseWriter, r *http.Request) {
+// Handle POST /api/v1/users
+func (c Login) Handle(w http.ResponseWriter, r *http.Request) {
 	var (
-		req CreateRequestBody
-		res CreateResponseBody
+		req model.LogInParams
+		res model.LoginResponse
 	)
 
 	// Map HTTP request to request model
@@ -74,4 +62,9 @@ func (c Create) Handle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS")
 	w.Header().Add("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers")
 	_, _ = w.Write(data)
+	http.SetCookie(w, &http.Cookie{
+		Name:    "session_token",
+		Value:   res.Data.SessionToken,
+		Expires: res.Data.ExpireTime,
+	})
 }
