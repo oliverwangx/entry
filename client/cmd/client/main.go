@@ -24,10 +24,13 @@ func main() {
 
 	// start new router and register function
 	// 1. Register user log in
+
 	rtr := http.NewRouter()
 	rtr.RegisterUser(str)
+	rtr.RegisterNickName(str)
+	rtr.RegisterAvatar(str)
 
 	// Open the http server, listening and serving
-	srv := http.NewServer("0.0.0.0:8888", *rtr)
+	srv := http.NewServer("127.0.0.1:8888", *rtr)
 	log.Fatalln(srv.ListenAndServe())
 }

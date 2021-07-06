@@ -8,18 +8,44 @@ type Response interface {
 }
 
 type BaseResponse struct {
-	Code        int `json:"code"`
-	RequestType string
+	Code        int    `json:"code"`
+	RequestType string `json:"request_type"`
+}
+
+type LoginData struct {
+	ID           string `json:"id"`
+	CreatedAt    string `json:"created_at"`
+	NickName     string `json:"nick_name"`
+	AvatarPath   string `json:"avatar_path"`
+	SessionToken string `json:"session_token"`
+}
+
+type NickNameData struct {
+	NickName string `json:"nick_name"`
+}
+
+type AvatarData struct {
+	AvatarPath string `json:"avatar_path"`
 }
 
 type LoginResponse struct {
-	BaseResponse
-	Data struct {
-		ID           string    `json:"id"`
-		CreatedAt    string    `json:"created_at"`
-		SessionToken string    `json:"sessionToken"`
-		ExpireTime   time.Time `json:"Expires"`
-	} `json:"data"`
+	Code         int       `json:"code"`
+	RequestType  string    `json:"request_type"`
+	Data         LoginData `json:"data"`
+	SessionToken string    `json:"sessionToken"`
+	ExpireTime   time.Time `json:"Expires"`
+}
+
+type NickNameResponse struct {
+	Code        int          `json:"code"`
+	RequestType string       `json:"request_type"`
+	Data        NickNameData `json:"data"`
+}
+
+type AvatarResponse struct {
+	Code        int        `json:"code"`
+	RequestType string     `json:"request_tzype"`
+	Data        AvatarData `json:"data"`
 }
 
 func (r BaseResponse) GetRequestType() string {

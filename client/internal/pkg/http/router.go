@@ -21,6 +21,14 @@ func NewRouter() *Router {
 	}
 }
 
+func (r *Router) RegisterNickName(str storage.Storage) {
+	r.handler.HandlerFunc(http.MethodPost, "/api/v1/nickname", user.NewNickName(str).Handle)
+}
+
+func (r *Router) RegisterAvatar(str storage.Storage) {
+	r.handler.HandlerFunc(http.MethodPost, "/api/v1/avatar", user.NewAvatar(str).Handle)
+}
+
 func (r *Router) RegisterUser(str storage.Storage) {
 	r.handler.HandlerFunc(http.MethodPost, "/api/v1/users", user.NewLogIn(str).Handle)
 }
