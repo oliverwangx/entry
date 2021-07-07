@@ -76,7 +76,7 @@ func (n NickName) Handle(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("get data5", data)
 	// Respond
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
-	w.Header().Add("Access-Control-Allow-Origin ", "127.0.0.1")
+	w.Header().Add("Access-Control-Allow-Origin ", "http://127.0.0.1:5500")
 	w.Header().Add("Access-Control-Allow-Credentials", "true")
 	w.Header().Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	w.Header().Add("Access-Control-Allow-Headers ", "Access-Control-Allow-Headers ")

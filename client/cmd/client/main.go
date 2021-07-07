@@ -11,7 +11,7 @@ import (
 
 func main() {
 	// Open the sockets TCP connection pool
-	factory := func() (net.Conn, error) { return tcp.NewConnection("0.0.0.0:8989") }
+	factory := func() (net.Conn, error) { return tcp.NewConnection("127.0.0.1:8989") }
 	connectionPool, err := pool.NewChannelPool(5, 30, factory)
 	if err != nil {
 		log.Fatalln("TCP Client Connection Error:", err)
