@@ -2,11 +2,11 @@ package storage
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/pkg/errors"
 	"io"
 	"net"
 	"shopee-backend-entry-task/client/internal/utils/pool"
+	"shopee-backend-entry-task/logger"
 	"strings"
 )
 
@@ -36,7 +36,7 @@ func (s Storage) Store(outgoing interface{}, incoming interface{}) error {
 	defer func(TCPConn net.Conn) {
 		err := TCPConn.Close()
 		if err != nil {
-			fmt.Println("TCP connection return to the pool failed")
+			logger.Error.Println("TCP connection return to the pool failed")
 		}
 	}(TCPConn)
 
@@ -56,7 +56,7 @@ func (s Storage) Store(outgoing interface{}, incoming interface{}) error {
 		}
 
 		res, err := serverReader.ReadString('\n')
-		fmt.Println("get response ", res)
+		logger.Info.Println("Receive HTTP Response : ", res)
 		switch err {
 		case nil:
 			return NewResponse(res, incoming)

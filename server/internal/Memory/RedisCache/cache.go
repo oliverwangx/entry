@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/go-redis/redis/v8"
+	"shopee-backend-entry-task/config"
 	"shopee-backend-entry-task/model"
 )
 
@@ -11,9 +12,9 @@ type CacheStore struct {
 	rds *redis.Client
 }
 
-func (c *CacheStore) Init() {
+func (c *CacheStore) Init(serverConfig map[string]string) {
 	c.rds = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     serverConfig[config.RedisHost] + serverConfig[config.RedisPort],
 		Password: "",
 		DB:       0,
 	})

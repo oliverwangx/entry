@@ -13,11 +13,11 @@ type DataStore struct {
 	Cache *redisCache.CacheStore
 }
 
-func (d *DataStore) Init() (err error) {
+func (d *DataStore) Init(serverConfig map[string]string) (err error) {
 
 	d.Cache = new(redisCache.CacheStore)
 	d.DB = new(sqlDB.DBStore)
-	d.Cache.Init()
+	d.Cache.Init(serverConfig)
 	err = d.DB.Init()
 	return
 }

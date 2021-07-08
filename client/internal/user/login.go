@@ -2,9 +2,9 @@ package user
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"shopee-backend-entry-task/client/internal/pkg/storage"
+	"shopee-backend-entry-task/logger"
 	"shopee-backend-entry-task/model"
 )
 
@@ -29,26 +29,26 @@ func (c Login) Handle(w http.ResponseWriter, r *http.Request) {
 	// Map HTTP request to request model
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Printf("unable to decode HTTP request: %v", err)
+		logger.Error.Println("unable to decode HTTP request: %v", err)
 		return
 	}
 
 	if req.RequestType == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Println("Can not recog the request type")
+		logger.Error.Println("Can not recognize the request type")
 		return
 	}
 	// Store request model and map response model
 	if err := c.storage.Store(req, &res); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("unable to store request: %v", err)
+		logger.Error.Println("unable to store request: %v", err)
 		return
 	}
 
 	// Check if the response code is an expected value
 	if res.Code != http.StatusOK {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("unexpected storage response: %d", res.Code)
+		logger.Error.Println("unexpected storage response: %d", res.Code)
 		return
 	}
 
@@ -56,7 +56,7 @@ func (c Login) Handle(w http.ResponseWriter, r *http.Request) {
 	data, err := json.Marshal(res.Data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("unable to marshal response: %v", err)
+		logger.Error.Println("unable to marshal response: %v", err)
 		return
 	}
 

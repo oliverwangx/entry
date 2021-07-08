@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/md5"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"shopee-backend-entry-task/config"
+	"shopee-backend-entry-task/logger"
 	"shopee-backend-entry-task/model"
 	"shopee-backend-entry-task/requestType"
 	Memory2 "shopee-backend-entry-task/server/internal/Memory"
@@ -20,33 +23,16 @@ import (
 	"time"
 )
 
-var users = map[string]string{
-	"user1": "password1",
-	"user2": "password2",
-	"wxy":   "950822",
-}
-
-var usersNickName = map[string]string{
-	"user1": "Oliver",
-	"user2": "Chole",
-	"wxy":   "Nancy",
-}
-
-var usersAvatarPath = map[string]string{
-	"user1": "image/person3.png",
-	"user2": "image/person2.png",
-	"wxy":   "image/person1.png",
-}
-
 var cache redis.Conn
 var DataStoreClient Memory2.DataStore
 var ctx context.Context
 
 func main() {
-	// initCache()
-	DataStoreClient.Init()
+	serverConfig, err := config.GetConfig()
+	DataStoreClient.Init(serverConfig)
 	ctx = context.Background()
-	listener, err := net.Listen("tcp", "127.0.0.1:8989")
+
+	listener, err := net.Listen("tcp", serverConfig[config.TcpHost]+serverConfig[config.TcpPort])
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -63,14 +49,6 @@ func main() {
 	}
 }
 
-func initCache() {
-	conn, err := redis.DialURL("redis://localhost")
-	if err != nil {
-		panic(err)
-	}
-	cache = conn
-}
-
 func receiveClientRequest(con net.Conn) {
 	defer con.Close()
 	var response []byte
@@ -81,35 +59,40 @@ func receiveClientRequest(con net.Conn) {
 		case nil:
 			clientRequest := strings.TrimSpace(clientRequest)
 			if response, err = handleRequest([]byte(clientRequest)); err != nil {
-				log.Println("handle request error: " + err.Error())
+				logger.Error.Println("handle request error: " + err.Error())
 			}
 
 			if clientRequest == ":QUIT" {
-				log.Println("client requested server to close the connection so closing")
+				logger.Error.Println("client requested server to close the connection so closing")
 				return
 			}
 		case io.EOF:
-			log.Println("client closed the connection by terminating the process")
+			logger.Error.Println("client closed the connection by terminating the process")
 			return
 		default:
-			log.Printf("error: %v\n", err)
+			logger.Error.Println("error: %v\n", err)
 			return
 		}
 
 		if _, err = con.Write(response); err != nil {
-			log.Printf("failed to respond to client: %v\n", err)
+			logger.Error.Println("failed to respond to client: %v\n", err)
 		}
 	}
 }
 
 func handleRequest(request []byte) (resp []byte, err error) {
+	//serverConfig, err := config.GetConfig()
+	if err != nil {
+		logger.Error.Println("Parse Configuration", err)
+		return
+	}
 	var params model.BasicParams
 	err = json.Unmarshal(request, &params)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println("Handle Request: " + params.RequestType)
+	logger.Info.Println("Handle Request:" + params.RequestType)
 	switch params.RequestType {
 	case requestType.Login:
 		var loginParams model.LogInParams
@@ -141,8 +124,8 @@ func handleRequest(request []byte) (resp []byte, err error) {
 			return createLoginResponse(response), err
 		}
 		expectedPassword := user.Password
-
-		if expectedPassword != loginParams.Password {
+		hashedPassword := fmt.Sprintf("%x", md5.Sum([]byte(loginParams.Password)))
+		if expectedPassword != hashedPassword {
 			// w.WriteHeader(http.StatusUnauthorized)
 			response.Code = http.StatusUnauthorized
 			return createLoginResponse(response), err
@@ -164,6 +147,10 @@ func handleRequest(request []byte) (resp []byte, err error) {
 		response.Data.NickName = user.Nickname
 		response.Data.SessionToken = sessionToken
 		response.SessionToken = sessionToken
+		//expireTime, err := strconv.Atoi(serverConfig[config.SESSIONTIME])
+		//if err != nil{
+		//	log.Fatalln("configure format error")
+		//}
 		response.ExpireTime = time.Now().UTC().Add(30000 * time.Minute)
 		return createLoginResponse(response), nil
 

@@ -7,14 +7,26 @@ import (
 	"shopee-backend-entry-task/client/internal/pkg/storage"
 	"shopee-backend-entry-task/client/internal/pkg/tcp"
 	"shopee-backend-entry-task/client/internal/utils/pool"
+	"shopee-backend-entry-task/config"
+	"shopee-backend-entry-task/logger"
 )
+
+// var serverConfig map[string]string
 
 func main() {
 	// Open the sockets TCP connection pool
-	factory := func() (net.Conn, error) { return tcp.NewConnection("127.0.0.1:8989") }
+	serverConfig, err := config.GetConfig()
+	if err != nil {
+		logger.Error.Println("Parse Configuration", err)
+		return
+	}
+
+	factory := func() (net.Conn, error) {
+		return tcp.NewConnection(serverConfig[config.TcpHost] + serverConfig[config.TcpPort])
+	}
 	connectionPool, err := pool.NewChannelPool(5, 30, factory)
 	if err != nil {
-		log.Fatalln("TCP Client Connection Error:", err)
+		logger.Error.Println("TCP Client Connection Error:", err)
 	}
 	// close the sockets TCP client
 	defer connectionPool.Close()
@@ -31,6 +43,6 @@ func main() {
 	rtr.RegisterAvatar(str)
 
 	// Open the http server, listening and serving
-	srv := http.NewServer("127.0.0.1:8888", *rtr)
+	srv := http.NewServer(serverConfig[config.WebHost]+serverConfig[config.WebPort], *rtr)
 	log.Fatalln(srv.ListenAndServe())
 }
