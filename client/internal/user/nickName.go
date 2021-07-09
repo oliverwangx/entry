@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"shopee-backend-entry-task/client/internal/pkg/storage"
-	"shopee-backend-entry-task/logger"
 	"shopee-backend-entry-task/model"
+	logger2 "shopee-backend-entry-task/utils/logger"
 )
 
 type NickName struct {
@@ -29,7 +29,7 @@ func (n NickName) Handle(w http.ResponseWriter, r *http.Request) {
 	req.RequestType = "update_nickname"
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		logger.Error.Println("unable to decode HTTP request: %v", err)
+		logger2.Error.Println("unable to decode HTTP request: %v", err)
 		return
 	}
 
@@ -38,12 +38,12 @@ func (n NickName) Handle(w http.ResponseWriter, r *http.Request) {
 		if err == http.ErrNoCookie {
 			// If the cookie is not set, return an unauthorized status
 			w.WriteHeader(http.StatusUnauthorized)
-			logger.Error.Println("Request StatusUnauthorized")
+			logger2.Error.Println("Request StatusUnauthorized")
 			return
 		}
 		// For any other type of error, return a bad request status
 		w.WriteHeader(http.StatusBadRequest)
-		logger.Error.Println("StatusBadRequest")
+		logger2.Error.Println("StatusBadRequest")
 		return
 	}
 	sessionToken := c.Value
@@ -51,20 +51,20 @@ func (n NickName) Handle(w http.ResponseWriter, r *http.Request) {
 
 	if err := n.storage.Store(req, &res); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		logger.Error.Println("unable to store request: %v", err)
+		logger2.Error.Println("unable to store request: %v", err)
 		return
 	}
 
 	if res.Code != http.StatusOK {
 		w.WriteHeader(http.StatusInternalServerError)
-		logger.Error.Println("unexpected storage response: %d", res.Code)
+		logger2.Error.Println("unexpected storage response: %d", res.Code)
 		return
 	}
 
 	data, err := json.Marshal(res.Data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		logger.Error.Println("unable to marshal response: %v", err)
+		logger2.Error.Println("unable to marshal response: %v", err)
 		return
 	}
 

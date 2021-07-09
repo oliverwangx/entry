@@ -5,16 +5,16 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"net"
-	"shopee-backend-entry-task/client/internal/utils/pool"
-	"shopee-backend-entry-task/logger"
+	logger2 "shopee-backend-entry-task/utils/logger"
+	pool2 "shopee-backend-entry-task/utils/pool"
 	"strings"
 )
 
 type Storage struct {
-	connectionPool pool.Pool
+	connectionPool pool2.Pool
 }
 
-func New(p pool.Pool) Storage {
+func New(p pool2.Pool) Storage {
 	return Storage{
 		connectionPool: p,
 	}
@@ -24,6 +24,7 @@ func New(p pool.Pool) Storage {
 // network request from a copy of `outgoing` struct and updates the
 // reference of `incoming` struct with response body.
 func (s Storage) Store(outgoing interface{}, incoming interface{}) error {
+	logger2.Info.Println("length of the connection pool is ", s.connectionPool.Len())
 	req, err := NewRequest(outgoing)
 	if err != nil {
 		return errors.Wrap(err, "create request")
@@ -36,18 +37,20 @@ func (s Storage) Store(outgoing interface{}, incoming interface{}) error {
 	defer func(TCPConn net.Conn) {
 		err := TCPConn.Close()
 		if err != nil {
-			logger.Error.Println("TCP connection return to the pool failed")
+			logger2.Error.Println("TCP connection return to the pool failed")
 		}
 	}(TCPConn)
 
 	serverReader := bufio.NewReader(TCPConn)
 
 	for {
-		req, err := clientReader.ReadString('\n')
+		eachReq, err := clientReader.ReadString('\n')
 		switch err {
 		case nil:
-			if _, err = TCPConn.Write([]byte(strings.TrimSpace(req) + "\n")); err != nil {
-				return errors.Wrap(err, "send request")
+			logger2.Info.Println("Successfully received the request:", eachReq)
+			if _, err = TCPConn.Write([]byte(strings.TrimSpace(eachReq) + "\n")); err != nil {
+				logger2.Error.Fatalln("TCP client send the request failed, TCPConn", TCPConn)
+				return errors.Wrap(err, "send request failed")
 			}
 		case io.EOF:
 			return errors.Wrap(err, "client closed the connection")
@@ -56,7 +59,7 @@ func (s Storage) Store(outgoing interface{}, incoming interface{}) error {
 		}
 
 		res, err := serverReader.ReadString('\n')
-		logger.Info.Println("Receive HTTP Response : ", res)
+		logger2.Info.Println("Receive TCP Response : ", res)
 		switch err {
 		case nil:
 			return NewResponse(res, incoming)

@@ -2,6 +2,7 @@ package pool
 
 import (
 	"net"
+	"shopee-backend-entry-task/utils/logger"
 	"sync"
 )
 
@@ -17,6 +18,7 @@ type PoolConn struct {
 // Close puts the given connects back to the pool instead of closing it.
 func (p *PoolConn) Close() error {
 	p.mu.RLock()
+	defer logger.Info.Println("还了一个链接")
 	defer p.mu.RUnlock()
 
 	if p.unusable {

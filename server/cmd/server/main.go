@@ -15,10 +15,10 @@ import (
 	"net"
 	"net/http"
 	"shopee-backend-entry-task/config"
-	"shopee-backend-entry-task/logger"
 	"shopee-backend-entry-task/model"
-	"shopee-backend-entry-task/requestType"
+	requestType2 "shopee-backend-entry-task/model/requestType"
 	Memory2 "shopee-backend-entry-task/server/internal/Memory"
+	logger2 "shopee-backend-entry-task/utils/logger"
 	"strings"
 	"time"
 )
@@ -42,6 +42,7 @@ func main() {
 		con, err := listener.Accept()
 		if err != nil {
 			log.Println(err)
+			logger2.Error.Println("TCP server connection fails", con)
 			continue
 		}
 
@@ -59,23 +60,23 @@ func receiveClientRequest(con net.Conn) {
 		case nil:
 			clientRequest := strings.TrimSpace(clientRequest)
 			if response, err = handleRequest([]byte(clientRequest)); err != nil {
-				logger.Error.Println("handle request error: " + err.Error())
+				logger2.Error.Println("handle request error: " + err.Error())
 			}
 
 			if clientRequest == ":QUIT" {
-				logger.Error.Println("client requested server to close the connection so closing")
+				logger2.Info.Println("client requested server to close the connection so closing")
 				return
 			}
 		case io.EOF:
-			logger.Error.Println("client closed the connection by terminating the process")
+			logger2.Error.Println("client closed the connection by terminating the process")
 			return
 		default:
-			logger.Error.Println("error: %v\n", err)
+			logger2.Fatal.Println("error: %v\n", err)
 			return
 		}
 
 		if _, err = con.Write(response); err != nil {
-			logger.Error.Println("failed to respond to client: %v\n", err)
+			logger2.Error.Println("failed to respond to client: %v\n", err)
 		}
 	}
 }
@@ -83,7 +84,7 @@ func receiveClientRequest(con net.Conn) {
 func handleRequest(request []byte) (resp []byte, err error) {
 	//serverConfig, err := config.GetConfig()
 	if err != nil {
-		logger.Error.Println("Parse Configuration", err)
+		logger2.Error.Println("Parse Configuration", err)
 		return
 	}
 	var params model.BasicParams
@@ -92,9 +93,9 @@ func handleRequest(request []byte) (resp []byte, err error) {
 		return nil, err
 	}
 
-	logger.Info.Println("Handle Request:" + params.RequestType)
+	logger2.Info.Println("Handle Request:" + params.RequestType)
 	switch params.RequestType {
-	case requestType.Login:
+	case requestType2.Login:
 		var loginParams model.LogInParams
 		response := &model.LoginResponse{
 			Code: http.StatusOK,
@@ -110,6 +111,7 @@ func handleRequest(request []byte) (resp []byte, err error) {
 		if err = json.Unmarshal(request, &loginParams); err != nil {
 			//w.WriteHeader(http.StatusBadRequest)
 			response.Code = http.StatusBadRequest
+			logger2.Error.Println("TCP server Unmarshal problem", err)
 			return createLoginResponse(response), err
 
 		}
@@ -117,10 +119,12 @@ func handleRequest(request []byte) (resp []byte, err error) {
 		user, err := DataStoreClient.GetUserByUsername(ctx, loginParams.Username)
 		if err != nil {
 			response.Code = http.StatusHTTPVersionNotSupported
+			logger2.Error.Println("Joint DataBase Query Error", err)
 			return createLoginResponse(response), err
 		}
 		if user == nil {
-			response.Code = http.StatusHTTPVersionNotSupported
+			response.Code = http.StatusExpectationFailed
+			logger2.Error.Println(":User Receive nil Error", err)
 			return createLoginResponse(response), err
 		}
 		expectedPassword := user.Password
@@ -154,7 +158,7 @@ func handleRequest(request []byte) (resp []byte, err error) {
 		response.ExpireTime = time.Now().UTC().Add(30000 * time.Minute)
 		return createLoginResponse(response), nil
 
-	case requestType.UpdateNickname:
+	case requestType2.UpdateNickname:
 		var nickNameParams model.NickNameParams
 		if err = json.Unmarshal(request, &nickNameParams); err != nil {
 			return createNickNameResponse(http.StatusBadRequest, ""), err
@@ -187,7 +191,7 @@ func handleRequest(request []byte) (resp []byte, err error) {
 		// usersNickName[fmt.Sprintf("%s", userName)] = nickNameParams.NickName
 		return createNickNameResponse(http.StatusOK, nickNameParams.NickName), nil
 
-	case requestType.UpdateAvatar:
+	case requestType2.UpdateAvatar:
 		var AvatarParams model.AvatarParams
 		if err = json.Unmarshal(request, &AvatarParams); err != nil {
 			return createAvatarResponse(http.StatusBadRequest, ""), err

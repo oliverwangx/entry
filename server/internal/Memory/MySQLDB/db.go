@@ -3,8 +3,8 @@ package sqlDB
 import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
-	"shopee-backend-entry-task/logger"
 	"shopee-backend-entry-task/model"
+	logger2 "shopee-backend-entry-task/utils/logger"
 )
 
 type DBStore struct {
@@ -13,13 +13,16 @@ type DBStore struct {
 
 func (d *DBStore) Init() (err error) {
 	d.db, err = sql.Open("mysql", "root:LEle950822@tcp(127.0.0.1:3306)/log_in_system")
+	d.db.SetMaxIdleConns(1000)
+	d.db.SetMaxOpenConns(500)
+	d.db.SetConnMaxLifetime(300)
 	return
 }
 
 func (d *DBStore) GetUserByUsername(username string) (user *model.User, err error) {
 	user = new(model.User)
 	err = d.db.QueryRow("SELECT username, password, avatar, nickname FROM User WHERE username = ?", username).Scan(&user.Username, &user.Password, &user.Avatar, &user.Nickname)
-	logger.Info.Println("sql", user)
+	logger2.Info.Println("sql: get user info: ", user)
 	return
 }
 

@@ -2,10 +2,10 @@ package Memory
 
 import (
 	"context"
-	"fmt"
 	"shopee-backend-entry-task/model"
 	"shopee-backend-entry-task/server/internal/Memory/MySQLDB"
 	"shopee-backend-entry-task/server/internal/Memory/RedisCache"
+	logger2 "shopee-backend-entry-task/utils/logger"
 )
 
 type DataStore struct {
@@ -25,14 +25,15 @@ func (d *DataStore) Init(serverConfig map[string]string) (err error) {
 func (d *DataStore) GetUserByUsername(ctx context.Context, username string) (user *model.User, err error) {
 	// fetch user information from cache
 	if user, err = d.Cache.GetUserByUsername(ctx, username); user != nil && err == nil {
+		logger2.Info.Println("Get User in Cache")
 		return
 	}
 	// fetch from sql database
 	if user, err = d.DB.GetUserByUsername(username); err != nil {
-		fmt.Println(err)
+		logger2.Error.Println("DataBase Fetch Data Error", err)
 		return
 	}
-	fmt.Println(user)
+	// fmt.Println(user)
 	// add user to cache
 	err = d.Cache.SetUser(ctx, username, user)
 	return
