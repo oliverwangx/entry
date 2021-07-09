@@ -6,6 +6,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"shopee-backend-entry-task/config"
 	"shopee-backend-entry-task/model"
+	"shopee-backend-entry-task/utils/logger"
 )
 
 type CacheStore struct {
@@ -22,9 +23,11 @@ func (c *CacheStore) Init(serverConfig map[string]string) {
 
 func (c *CacheStore) GetUserByUsername(ctx context.Context, username string) (user *model.User, err error) {
 	var val string
+	user = new(model.User)
 	if val, err = c.rds.Get(ctx, username).Result(); err != nil {
 		return
 	}
+
 	err = json.Unmarshal([]byte(val), user)
 	return
 }
@@ -32,9 +35,13 @@ func (c *CacheStore) GetUserByUsername(ctx context.Context, username string) (us
 func (c *CacheStore) SetUser(ctx context.Context, username string, user *model.User) (err error) {
 	var data []byte
 	if data, err = json.Marshal(*user); err != nil {
+		logger.Error.Println("user data Marshal problem is ", err)
 		return
 	}
 	err = c.rds.Set(ctx, username, data, 0).Err()
+	if err != nil {
+		logger.Error.Println("cache fails store information", err)
+	}
 	return
 }
 

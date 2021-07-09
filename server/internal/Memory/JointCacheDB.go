@@ -28,12 +28,15 @@ func (d *DataStore) GetUserByUsername(ctx context.Context, username string) (use
 		logger2.Info.Println("Get User in Cache")
 		return
 	}
+	if err != nil {
+		logger2.Info.Println("The resion redis can not hit", err)
+	}
 	// fetch from sql database
 	if user, err = d.DB.GetUserByUsername(username); err != nil {
 		logger2.Error.Println("DataBase Fetch Data Error", err)
 		return
 	}
-	// fmt.Println(user)
+	logger2.Info.Println(user, "Get user is", user)
 	// add user to cache
 	err = d.Cache.SetUser(ctx, username, user)
 	return

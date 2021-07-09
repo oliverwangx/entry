@@ -24,7 +24,7 @@ func main() {
 	factory := func() (net.Conn, error) {
 		return tcp.NewConnection(serverConfig[config.TcpHost] + serverConfig[config.TcpPort])
 	}
-	connectionPool, err := pool2.NewChannelPool(500, 2000, factory)
+	connectionPool, err := pool2.NewChannelPool(300, 500, factory)
 	if err != nil {
 		logger2.Error.Println("TCP Client Connection Error:", err)
 	}

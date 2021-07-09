@@ -5,6 +5,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"shopee-backend-entry-task/model"
 	logger2 "shopee-backend-entry-task/utils/logger"
+	"time"
 )
 
 type DBStore struct {
@@ -14,8 +15,8 @@ type DBStore struct {
 func (d *DBStore) Init() (err error) {
 	d.db, err = sql.Open("mysql", "root:LEle950822@tcp(127.0.0.1:3306)/log_in_system")
 	d.db.SetMaxIdleConns(1000)
-	d.db.SetMaxOpenConns(500)
-	d.db.SetConnMaxLifetime(300)
+	d.db.SetMaxOpenConns(1000)
+	d.db.SetConnMaxLifetime(300 * time.Second)
 	return
 }
 
