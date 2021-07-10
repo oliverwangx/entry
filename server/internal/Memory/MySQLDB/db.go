@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"shopee-backend-entry-task/model"
-	logger2 "shopee-backend-entry-task/utils/logger"
 	"time"
 )
 
@@ -23,7 +22,7 @@ func (d *DBStore) Init() (err error) {
 func (d *DBStore) GetUserByUsername(username string) (user *model.User, err error) {
 	user = new(model.User)
 	err = d.db.QueryRow("SELECT username, password, avatar, nickname FROM User WHERE username = ?", username).Scan(&user.Username, &user.Password, &user.Avatar, &user.Nickname)
-	logger2.Info.Println("sql: get user info: ", user)
+	//logger2.Info.Println("sql: get user info: ", user)
 	return
 }
 

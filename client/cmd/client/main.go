@@ -8,7 +8,7 @@ import (
 	"shopee-backend-entry-task/client/internal/pkg/tcp"
 	"shopee-backend-entry-task/config"
 	logger2 "shopee-backend-entry-task/utils/logger"
-	pool2 "shopee-backend-entry-task/utils/pool"
+	"shopee-backend-entry-task/utils/newPool"
 )
 
 // var serverConfig map[string]string
@@ -24,12 +24,18 @@ func main() {
 	factory := func() (net.Conn, error) {
 		return tcp.NewConnection(serverConfig[config.TcpHost] + serverConfig[config.TcpPort])
 	}
-	connectionPool, err := pool2.NewChannelPool(300, 500, factory)
+	connectionPool, err := newPool.NewGenericPool(5, 30, 10, factory)
 	if err != nil {
 		logger2.Error.Println("TCP Client Connection Error:", err)
 	}
 	// close the sockets TCP client
-	defer connectionPool.Close()
+	defer func(pool newPool.Pool) {
+		if err := pool.Shutdown(); err != nil {
+			logger2.Error.Println("Connection Pool shutdown fails")
+		}
+		logger2.Info.Fatalln("Connection Pool shutdown successfully")
+
+	}(connectionPool)
 
 	// storage binds the TCP connections
 	str := storage.New(connectionPool)
@@ -44,5 +50,8 @@ func main() {
 
 	// Open the http server, listening and serving
 	srv := http.NewServer(serverConfig[config.WebHost]+serverConfig[config.WebPort], *rtr)
+	//srv.SetKeepAlivesEnabled(false)
+
 	log.Fatalln(srv.ListenAndServe())
+	return
 }

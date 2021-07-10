@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"crypto/md5"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,8 +28,8 @@ var ctx context.Context
 
 func main() {
 	serverConfig, err := config.GetConfig()
-	DataStoreClient.Init(serverConfig)
-	ctx = context.Background()
+	// DataStoreClient.Init(serverConfig)
+	// ctx = context.Background()
 
 	listener, err := net.Listen("tcp", serverConfig[config.TcpHost]+serverConfig[config.TcpPort])
 	if err != nil {
@@ -64,11 +63,11 @@ func receiveClientRequest(con net.Conn) {
 			}
 
 			if clientRequest == ":QUIT" {
-				logger2.Info.Println("client requested server to close the connection so closing")
+				//logger2.Info.Println("client requested server to close the connection so closing")
 				return
 			}
 		case io.EOF:
-			logger2.Error.Println("client closed the connection by terminating the process")
+			//logger2.Error.Println("client closed the connection by terminating the process")
 			return
 		default:
 			logger2.Fatal.Println("error: %v\n", err)
@@ -93,10 +92,10 @@ func handleRequest(request []byte) (resp []byte, err error) {
 		return nil, err
 	}
 
-	logger2.Info.Println("Handle Request:" + params.RequestType)
+	//logger2.Info.Println("Handle Request:" + params.RequestType)
 	switch params.RequestType {
 	case requestType2.Login:
-		var loginParams model.LogInParams
+		//var loginParams model.LogInParams
 		response := &model.LoginResponse{
 			Code: http.StatusOK,
 			Data: model.LoginData{
@@ -108,54 +107,54 @@ func handleRequest(request []byte) (resp []byte, err error) {
 			SessionToken: "",
 			ExpireTime:   time.Now(),
 		}
-		if err = json.Unmarshal(request, &loginParams); err != nil {
-			//w.WriteHeader(http.StatusBadRequest)
-			response.Code = http.StatusBadRequest
-			logger2.Error.Println("TCP server Unmarshal problem", err)
-			return createLoginResponse(response), err
-
-		}
-		// user := &model.User{}
-		user, err := DataStoreClient.GetUserByUsername(ctx, loginParams.Username)
-		if err != nil {
-			response.Code = http.StatusHTTPVersionNotSupported
-			logger2.Error.Println("Joint DataBase Query Error", err)
-			return createLoginResponse(response), err
-		}
-		if user == nil {
-			response.Code = http.StatusExpectationFailed
-			logger2.Error.Println(":User Receive nil Error", err)
-			return createLoginResponse(response), err
-		}
-		expectedPassword := user.Password
-		hashedPassword := fmt.Sprintf("%x", md5.Sum([]byte(loginParams.Password)))
-		if expectedPassword != hashedPassword {
-			// w.WriteHeader(http.StatusUnauthorized)
-			response.Code = http.StatusUnauthorized
-			return createLoginResponse(response), err
-
-		}
-		// Create a new random session token
-		sessionToken := uuid.NewV4().String()
-		// Set the token in the cache, along with the user whom it represents
-		// The token has an expiry time of 3000 seconds
-		err = DataStoreClient.Cache.SetUserSession(ctx, loginParams.Username, sessionToken)
-
-		if err != nil {
-			// If there is an error in setting the cache, return an internal server error
-			// w.WriteHeader(http.StatusInternalServerError)
-			response.Code = http.StatusInternalServerError
-			return createLoginResponse(response), err
-		}
-		response.Data.AvatarPath = user.Avatar
-		response.Data.NickName = user.Nickname
-		response.Data.SessionToken = sessionToken
-		response.SessionToken = sessionToken
-		//expireTime, err := strconv.Atoi(serverConfig[config.SESSIONTIME])
-		//if err != nil{
-		//	log.Fatalln("configure format error")
+		//if err = json.Unmarshal(request, &loginParams); err != nil {
+		//	//w.WriteHeader(http.StatusBadRequest)
+		//	response.Code = http.StatusBadRequest
+		//	logger2.Error.Println("TCP server Unmarshal problem", err)
+		//	return createLoginResponse(response), err
+		//
 		//}
-		response.ExpireTime = time.Now().UTC().Add(30000 * time.Minute)
+		//// user := &model.User{}
+		//user, err := DataStoreClient.GetUserByUsername(ctx, loginParams.Username)
+		//if err != nil {
+		//	response.Code = http.StatusHTTPVersionNotSupported
+		//	logger2.Error.Println("Joint DataBase Query Error", err)
+		//	return createLoginResponse(response), err
+		//}
+		//if user == nil {
+		//	response.Code = http.StatusExpectationFailed
+		//	logger2.Error.Println(":User Receive nil Error", err)
+		//	return createLoginResponse(response), err
+		//}
+		//expectedPassword := user.Password
+		//hashedPassword := fmt.Sprintf("%x", md5.Sum([]byte(loginParams.Password)))
+		//if expectedPassword != hashedPassword {
+		//	// w.WriteHeader(http.StatusUnauthorized)
+		//	response.Code = http.StatusUnauthorized
+		//	return createLoginResponse(response), err
+		//
+		//}
+		//// Create a new random session token
+		//sessionToken := uuid.NewV4().String()
+		//// Set the token in the cache, along with the user whom it represents
+		//// The token has an expiry time of 3000 seconds
+		//err = DataStoreClient.Cache.SetUserSession(ctx, loginParams.Username, sessionToken)
+		//
+		//if err != nil {
+		//	// If there is an error in setting the cache, return an internal server error
+		//	// w.WriteHeader(http.StatusInternalServerError)
+		//	response.Code = http.StatusInternalServerError
+		//	return createLoginResponse(response), err
+		//}
+		//response.Data.AvatarPath = user.Avatar
+		//response.Data.NickName = user.Nickname
+		//response.Data.SessionToken = sessionToken
+		//response.SessionToken = sessionToken
+		////expireTime, err := strconv.Atoi(serverConfig[config.SESSIONTIME])
+		////if err != nil{
+		////	log.Fatalln("configure format error")
+		////}
+		//response.ExpireTime = time.Now().UTC().Add(30000 * time.Minute)
 		return createLoginResponse(response), nil
 
 	case requestType2.UpdateNickname:

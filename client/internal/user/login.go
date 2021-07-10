@@ -12,6 +12,12 @@ type Login struct {
 	storage storage.Storage
 }
 
+var count int
+
+func init() {
+	count = 0
+}
+
 // NewLogIn Constructor
 func NewLogIn(str storage.Storage) Login {
 	return Login{
@@ -21,6 +27,8 @@ func NewLogIn(str storage.Storage) Login {
 
 // Handle POST /api/v1/users
 func (c Login) Handle(w http.ResponseWriter, r *http.Request) {
+	//count += 1
+	//logger2.Info.Println("计数", count)
 	var (
 		req model.LogInParams
 		res model.LoginResponse
@@ -39,11 +47,15 @@ func (c Login) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Store request model and map response model
+	// start := time.Now() // 获取当前时间
 	if err := c.storage.Store(req, &res); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		logger2.Error.Println("unable to store request: %v", err)
 		return
 	}
+	// elapsed := time.Since(start)
+	// count += 1
+	//fmt.Println("该函数执行完成耗时：", elapsed, "计数", count)
 
 	// Check if the response code is an expected value
 	if res.Code != http.StatusOK {
@@ -62,10 +74,10 @@ func (c Login) Handle(w http.ResponseWriter, r *http.Request) {
 
 	// Respond
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
-	w.Header().Add("Access-Control-Allow-Origin ", "*")
-	w.Header().Add("Access-Control-Allow-Credentials", "true")
-	w.Header().Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-	w.Header().Add("Access-Control-Allow-Headers ", "Access-Control-Allow-Headers ")
+	//w.Header().Add("Access-Control-Allow-Origin ", "*")
+	//w.Header().Add("Access-Control-Allow-Credentials", "true")
+	//w.Header().Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	//w.Header().Add("Access-Control-Allow-Headers ", "Access-Control-Allow-Headers ")
 
 	http.SetCookie(w, &http.Cookie{
 		Name:    "session_token",

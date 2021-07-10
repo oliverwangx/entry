@@ -25,18 +25,18 @@ func (d *DataStore) Init(serverConfig map[string]string) (err error) {
 func (d *DataStore) GetUserByUsername(ctx context.Context, username string) (user *model.User, err error) {
 	// fetch user information from cache
 	if user, err = d.Cache.GetUserByUsername(ctx, username); user != nil && err == nil {
-		logger2.Info.Println("Get User in Cache")
+		//logger2.Info.Println("Get User in Cache")
 		return
 	}
 	if err != nil {
-		logger2.Info.Println("The resion redis can not hit", err)
+		//logger2.Info.Println("The resion redis can not hit", err)
 	}
 	// fetch from sql database
 	if user, err = d.DB.GetUserByUsername(username); err != nil {
 		logger2.Error.Println("DataBase Fetch Data Error", err)
 		return
 	}
-	logger2.Info.Println(user, "Get user is", user)
+	//logger2.Info.Println(user, "Get user is", user)
 	// add user to cache
 	err = d.Cache.SetUser(ctx, username, user)
 	return

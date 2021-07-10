@@ -1,14 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"shopee-backend-entry-task/model"
+	"net/http"
 )
 
 func main() {
-	user := &model.User{}
-	val := `{"Username":"oliver","Password":"1291ba28105cd226e2c12a436236e3f4","Nickname":"super_fancy","Avatar":"image/person4.png"}`
-	err := json.Unmarshal([]byte(val), user)
-	fmt.Println(err)
+	http.HandleFunc("/", HelloServer)
+	http.ListenAndServe(":8080", nil)
+}
+
+func HelloServer(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])
 }

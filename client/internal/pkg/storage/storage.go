@@ -6,15 +6,15 @@ import (
 	"io"
 	"net"
 	logger2 "shopee-backend-entry-task/utils/logger"
-	pool2 "shopee-backend-entry-task/utils/pool"
+	"shopee-backend-entry-task/utils/newPool"
 	"strings"
 )
 
 type Storage struct {
-	connectionPool pool2.Pool
+	connectionPool newPool.Pool
 }
 
-func New(p pool2.Pool) Storage {
+func New(p newPool.Pool) Storage {
 	return Storage{
 		connectionPool: p,
 	}
@@ -23,23 +23,30 @@ func New(p pool2.Pool) Storage {
 // Store writes data to network connection for handling. It prepares a
 // network request from a copy of `outgoing` struct and updates the
 // reference of `incoming` struct with response body.
+
 func (s Storage) Store(outgoing interface{}, incoming interface{}) error {
-	logger2.Info.Println("length of the connection pool is ", s.connectionPool.Len())
+	//logger2.Info.Println("length of the connection pool is ", s.connectionPool.Len())
 	req, err := NewRequest(outgoing)
 	if err != nil {
 		return errors.Wrap(err, "create request")
 	}
 	clientReader := bufio.NewReader(req)
-	TCPConn, err := s.connectionPool.Get()
+	TCPConn, err := s.connectionPool.Acquire()
 	if err != nil {
 		return errors.Wrap(err, "TCP connection get method failed")
 	}
-	defer func(TCPConn net.Conn) {
-		err := TCPConn.Close()
+	//defer func(TCPConn net.Conn) {
+	//	err := TCPConn.Close()
+	//	if err != nil {
+	//		logger2.Error.Println("TCP connection return to the pool failed")
+	//	}
+	//}(TCPConn)
+	defer func(connectionPool newPool.Pool, conn net.Conn) {
+		err := connectionPool.Release(conn)
 		if err != nil {
-			logger2.Error.Println("TCP connection return to the pool failed")
+			logger2.Error.Println("Release TCP conn to Pool Error")
 		}
-	}(TCPConn)
+	}(s.connectionPool, TCPConn)
 
 	serverReader := bufio.NewReader(TCPConn)
 
@@ -47,7 +54,7 @@ func (s Storage) Store(outgoing interface{}, incoming interface{}) error {
 		eachReq, err := clientReader.ReadString('\n')
 		switch err {
 		case nil:
-			logger2.Info.Println("Successfully received the request:", eachReq)
+			//logger2.Info.Println("Successfully received the request:", eachReq)
 			if _, err = TCPConn.Write([]byte(strings.TrimSpace(eachReq) + "\n")); err != nil {
 				logger2.Error.Fatalln("TCP client send the request failed, TCPConn", TCPConn)
 				return errors.Wrap(err, "send request failed")
@@ -59,7 +66,7 @@ func (s Storage) Store(outgoing interface{}, incoming interface{}) error {
 		}
 
 		res, err := serverReader.ReadString('\n')
-		logger2.Info.Println("Receive TCP Response : ", res)
+		//logger2.Info.Println("Receive TCP Response : ", res)
 		switch err {
 		case nil:
 			return NewResponse(res, incoming)
