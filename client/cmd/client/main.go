@@ -1,14 +1,13 @@
 package main
 
 import (
-	"log"
 	"net"
-	"shopee-backend-entry-task/client/internal/pkg/http"
-	"shopee-backend-entry-task/client/internal/pkg/storage"
-	"shopee-backend-entry-task/client/internal/pkg/tcp"
-	"shopee-backend-entry-task/config"
-	logger2 "shopee-backend-entry-task/utils/logger"
-	"shopee-backend-entry-task/utils/newPool"
+	"oliver/entry/client/internal/pkg/http"
+	"oliver/entry/client/internal/pkg/storage"
+	"oliver/entry/client/internal/pkg/tcp"
+	"oliver/entry/config"
+	"oliver/entry/utils/logger"
+	"oliver/entry/utils/newPool"
 )
 
 // var serverConfig map[string]string
@@ -17,7 +16,7 @@ func main() {
 	// Open the sockets TCP connection pool
 	serverConfig, err := config.GetConfig()
 	if err != nil {
-		logger2.Error.Println("Parse Configuration", err)
+		logger.Error.Println("Parse Configuration", err)
 		return
 	}
 
@@ -26,14 +25,14 @@ func main() {
 	}
 	connectionPool, err := newPool.NewGenericPool(5, 30, 10, factory)
 	if err != nil {
-		logger2.Error.Println("TCP Client Connection Error:", err)
+		logger.Error.Println("TCP Client Connection Pool Error:", err)
 	}
 	// close the sockets TCP client
 	defer func(pool newPool.Pool) {
 		if err := pool.Shutdown(); err != nil {
-			logger2.Error.Println("Connection Pool shutdown fails")
+			logger.Error.Println("Connection Pool shutdown fails")
 		}
-		logger2.Info.Fatalln("Connection Pool shutdown successfully")
+		logger.Error.Println("Connection Pool shutdown successfully, HTTP server + TCP client shut down")
 
 	}(connectionPool)
 
@@ -52,6 +51,6 @@ func main() {
 	srv := http.NewServer(serverConfig[config.WebHost]+serverConfig[config.WebPort], *rtr)
 	//srv.SetKeepAlivesEnabled(false)
 
-	log.Fatalln(srv.ListenAndServe())
+	logger.Error.Println(srv.ListenAndServe())
 	return
 }

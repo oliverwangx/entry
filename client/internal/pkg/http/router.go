@@ -3,8 +3,8 @@ package http
 import (
 	"github.com/julienschmidt/httprouter"
 	"net/http"
-	"shopee-backend-entry-task/client/internal/pkg/storage"
-	"shopee-backend-entry-task/client/internal/user"
+	"oliver/entry/client/internal/pkg/storage"
+	"oliver/entry/client/internal/user"
 )
 
 type Router struct {

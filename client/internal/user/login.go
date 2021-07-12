@@ -3,9 +3,9 @@ package user
 import (
 	"encoding/json"
 	"net/http"
-	"shopee-backend-entry-task/client/internal/pkg/storage"
-	"shopee-backend-entry-task/model"
-	logger2 "shopee-backend-entry-task/utils/logger"
+	"oliver/entry/client/internal/pkg/storage"
+	"oliver/entry/model"
+	"oliver/entry/utils/logger"
 )
 
 type Login struct {
@@ -37,20 +37,20 @@ func (c Login) Handle(w http.ResponseWriter, r *http.Request) {
 	// Map HTTP request to request model
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		logger2.Error.Println("unable to decode HTTP request: %v", err)
+		logger.Error.Println("unable to decode HTTP request: %v", err)
 		return
 	}
 
 	if req.RequestType == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		logger2.Error.Println("Can not recognize the request type")
+		logger.Error.Println("Can not recognize the request type")
 		return
 	}
 	// Store request model and map response model
 	// start := time.Now() // 获取当前时间
 	if err := c.storage.Store(req, &res); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		logger2.Error.Println("unable to store request: %v", err)
+		logger.Error.Println("unable to store request: %v", err)
 		return
 	}
 	// elapsed := time.Since(start)
@@ -60,7 +60,7 @@ func (c Login) Handle(w http.ResponseWriter, r *http.Request) {
 	// Check if the response code is an expected value
 	if res.Code != http.StatusOK {
 		w.WriteHeader(http.StatusInternalServerError)
-		logger2.Error.Println("unexpected storage response: ", res.Code)
+		logger.Error.Println("unexpected storage response: ", res.Code)
 		return
 	}
 
@@ -68,16 +68,16 @@ func (c Login) Handle(w http.ResponseWriter, r *http.Request) {
 	data, err := json.Marshal(res.Data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		logger2.Error.Println("unable to marshal response: %v", err)
+		logger.Error.Println("unable to marshal response: %v", err)
 		return
 	}
 
 	// Respond
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
-	//w.Header().Add("Access-Control-Allow-Origin ", "*")
-	//w.Header().Add("Access-Control-Allow-Credentials", "true")
-	//w.Header().Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-	//w.Header().Add("Access-Control-Allow-Headers ", "Access-Control-Allow-Headers ")
+	w.Header().Add("Access-Control-Allow-Origin ", "*")
+	w.Header().Add("Access-Control-Allow-Credentials", "true")
+	w.Header().Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Add("Access-Control-Allow-Headers ", "Access-Control-Allow-Headers ")
 
 	http.SetCookie(w, &http.Cookie{
 		Name:    "session_token",

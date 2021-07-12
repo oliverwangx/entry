@@ -3,9 +3,9 @@ package user
 import (
 	"encoding/json"
 	"net/http"
-	"shopee-backend-entry-task/client/internal/pkg/storage"
-	"shopee-backend-entry-task/model"
-	logger2 "shopee-backend-entry-task/utils/logger"
+	"oliver/entry/client/internal/pkg/storage"
+	"oliver/entry/model"
+	"oliver/entry/utils/logger"
 )
 
 type Avatar struct {
@@ -31,7 +31,7 @@ func (a Avatar) Handle(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		logger2.Error.Println("unable to decode HTTP request: %v", err)
+		logger.Error.Println("unable to decode HTTP request: %v", err)
 		return
 	}
 
@@ -53,14 +53,14 @@ func (a Avatar) Handle(w http.ResponseWriter, r *http.Request) {
 	// Store request model and map response model
 	if err := a.storage.Store(req, &res); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		logger2.Error.Println("unable to store request: %v", err)
+		logger.Error.Println("unable to store request: %v", err)
 		return
 	}
 
 	// Check if the response code is an expected value
 	if res.Code != http.StatusOK {
 		w.WriteHeader(http.StatusInternalServerError)
-		logger2.Error.Println("unexpected storage response: %d", res.Code)
+		logger.Error.Println("unexpected storage response: %d", res.Code)
 		return
 	}
 
@@ -68,7 +68,7 @@ func (a Avatar) Handle(w http.ResponseWriter, r *http.Request) {
 	data, err := json.Marshal(res.Data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		logger2.Error.Println("unable to marshal response: %v", err)
+		logger.Error.Println("unable to marshal response: %v", err)
 		return
 	}
 

@@ -2,14 +2,14 @@ package tcp
 
 import (
 	"net"
-	logger2 "shopee-backend-entry-task/utils/logger"
+	"oliver/entry/utils/logger"
 	"time"
 )
 
 func NewConnection(address string) (net.Conn, error) {
-	Conn, err := net.DialTimeout("tcp", address, 100*time.Second)
+	Conn, err := net.DialTimeout("tcp", address, 5*time.Second)
 	if err != nil {
-		logger2.Error.Println("Dial fails")
+		logger.Error.Println("Dial fails")
 	}
 	return Conn, err
 }

@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/go-redis/redis/v8"
-	"shopee-backend-entry-task/config"
-	"shopee-backend-entry-task/model"
-	"shopee-backend-entry-task/utils/logger"
+	"oliver/entry/config"
+	"oliver/entry/model"
+	"oliver/entry/utils/logger"
+	"time"
 )
 
 type CacheStore struct {
@@ -18,6 +19,7 @@ func (c *CacheStore) Init(serverConfig map[string]string) {
 		Addr:     serverConfig[config.RedisHost] + serverConfig[config.RedisPort],
 		Password: "",
 		DB:       0,
+		DialTimeout: 1 * time.Second,
 	})
 }
 

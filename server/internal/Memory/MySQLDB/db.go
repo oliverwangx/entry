@@ -3,7 +3,7 @@ package sqlDB
 import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
-	"shopee-backend-entry-task/model"
+	"oliver/entry/model"
 	"time"
 )
 
@@ -12,7 +12,7 @@ type DBStore struct {
 }
 
 func (d *DBStore) Init() (err error) {
-	d.db, err = sql.Open("mysql", "root:LEle950822@tcp(127.0.0.1:3306)/log_in_system")
+	d.db, err = sql.Open("mysql", "root:LEle950822@tcp(127.0.0.1:3306)/log_in_system?timeout=3s")
 	d.db.SetMaxIdleConns(1000)
 	d.db.SetMaxOpenConns(1000)
 	d.db.SetConnMaxLifetime(300 * time.Second)
@@ -36,18 +36,3 @@ func (d *DBStore) UpdateUserNickname(username string, nickname string) (err erro
 	return
 }
 
-//
-//func (d *DBStore) SetUserSession(username string, token string) (err error) {
-//	_, err = d.db.Exec("INSERT INTO Session (username, session) VALUES (?, ?)", username, token)
-//	return
-//}
-//
-//func (d *DBStore) GetUserSession(username string) (token string, err error) {
-//	err = d.db.QueryRow("SELECT session FROM Session WHERE username = ?", username).Scan(&token)
-//	return
-//}
-//
-//func (d *DBStore) DeleteUserSession(username string) (err error) {
-//	_, err = d.db.Exec("DELETE FROM Session Where username = ?", username)
-//	return
-//}

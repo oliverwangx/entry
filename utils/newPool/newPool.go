@@ -4,7 +4,7 @@ import (
 	"errors"
 	"io"
 	"net"
-	logger2 "shopee-backend-entry-task/utils/logger"
+	"oliver/entry/utils/logger"
 	"sync"
 	"time"
 )
@@ -64,7 +64,7 @@ func NewGenericPool(minOpen, maxOpen int, maxLifetime time.Duration, factory fac
 
 func (p *GenericPool) Acquire() (net.Conn, error) {
 	if p.closed {
-		logger2.Error.Println("这个连接已经关闭了")
+		logger.Error.Println("这个连接已经关闭了")
 		return nil, ErrPoolClosed
 	}
 	for {

@@ -2,10 +2,10 @@ package Memory
 
 import (
 	"context"
-	"shopee-backend-entry-task/model"
-	"shopee-backend-entry-task/server/internal/Memory/MySQLDB"
-	"shopee-backend-entry-task/server/internal/Memory/RedisCache"
-	logger2 "shopee-backend-entry-task/utils/logger"
+	"oliver/entry/model"
+	sqlDB "oliver/entry/server/internal/Memory/MySQLDB"
+	redisCache "oliver/entry/server/internal/Memory/RedisCache"
+	"oliver/entry/utils/logger"
 )
 
 type DataStore struct {
@@ -22,18 +22,18 @@ func (d *DataStore) Init(serverConfig map[string]string) (err error) {
 	return
 }
 
-func (d *DataStore) GetUserByUsername(ctx context.Context, username string) (user *model.User, err error) {
+func (d *DataStore) GetUserByUsername(ctx context.Context, username string) (user * model.User, err error) {
 	// fetch user information from cache
 	if user, err = d.Cache.GetUserByUsername(ctx, username); user != nil && err == nil {
 		//logger2.Info.Println("Get User in Cache")
 		return
 	}
 	if err != nil {
-		//logger2.Info.Println("The resion redis can not hit", err)
+		logger.Error.Println("The redis can not hit", err)
 	}
 	// fetch from sql database
 	if user, err = d.DB.GetUserByUsername(username); err != nil {
-		logger2.Error.Println("DataBase Fetch Data Error", err)
+		logger.Error.Println("DataBase Fetch Data Error", err)
 		return
 	}
 	//logger2.Info.Println(user, "Get user is", user)
@@ -48,7 +48,6 @@ func (d *DataStore) UpdateUserAvatar(ctx context.Context, userName string, url s
 	}
 	// clear cache
 	err = d.Cache.DeleteUser(ctx, userName)
-	// err = d.Cache.SetUser(ctx, user.Username, user)
 	return
 }
 
@@ -57,14 +56,10 @@ func (d *DataStore) UpdateUserNickname(ctx context.Context, userName string, nic
 		return
 	}
 	err = d.Cache.DeleteUser(ctx, userName)
-	// err = d.Cache.SetUser(ctx, user.Username, user)
 	return
 }
 
 func (d *DataStore) SetUserSession(ctx context.Context, username string, token string) (err error) {
-	// if err = d.db.SetUserSession(username, token); err != nil {
-	//	return
-	//}
 	err = d.Cache.SetUserSession(ctx, username, token)
 	return
 }
